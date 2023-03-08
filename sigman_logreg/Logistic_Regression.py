@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression, LinearRegression
-import logreg_stats as lr_stats
+import sigman_logreg.logreg_stats as lr_stats
 import itertools
 import time
 
