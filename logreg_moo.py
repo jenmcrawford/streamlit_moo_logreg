@@ -23,6 +23,8 @@ import sigman_logreg.Logistic_Regression as fsc
 from sigman_logreg.logreg_stats import calc_mcfad, calc_mcfadden_R2, precision_recall_f1_score, test_accuracy_score, kfold_logreg
 import logreg_inp as inp
 
+from sigman_logreg.sig_fun import plot_fit_1D,heatmap_logreg,data_prep_fun
+
 
 ## HOMEPAGE
 
@@ -106,9 +108,6 @@ if type(compinp) is not list: #use session state instead?
     X_names, X_labels, X_all, y_labels_comp, X_labelname, X_labelname_dict = inp.param_preprocess(compinp)
     y_labels_exp, y, y_labels, y_og = inp.exp_preprocess(expinp,resp_label,y_labels_comp, y_cut)
 
-    # X = array of descriptor values for the ligands with experimental results
-    X = np.asarray(compinp.loc[y_labels],dtype=np.float)
-
 # --------------------------------------------------------------------------------------------------------------------------------------------
 # view if class imbalance
 # --------------------------------------------------------------------------------------------------------------------------------------------
@@ -144,8 +143,9 @@ if st.session_state.param_import == True and st.session_state.exp_import == True
 # --------------------------------------------------------------------------------------------------------------------------------------------
 # top univariate logistic regression
 # --------------------------------------------------------------------------------------------------------------------------------------------
-st.markdown("## :medal: Get top univariate logistic regression models")
-
+st.markdown("### :medal: Get top univariate logistic regression models")
+# X = array of descriptor values for the ligands with experimental results
+X = np.asarray(compinp.loc[y_labels],dtype=np.float)
 results_1_param = pd.DataFrame(columns=['Model', 'Accuracy', 'McFadden_R2', 'Param_name', 'Threshold_Value'])
 
 count = 0
@@ -160,4 +160,28 @@ for i in range(len(X_labels)):
     results_1_param = results_1_param.append(row_i, ignore_index=True)
 
 results_1_param = results_1_param.sort_values('McFadden_R2', ascending=False)
-results_1_param.head(10)
+st.write(results_1_param.head(10))
+
+# --------------------------------------------------------------------------------------------------------------------------------------------
+# data preparation
+# --------------------------------------------------------------------------------------------------------------------------------------------
+
+X_sel,y_sel,labels_sel,exclude = X,y,y_labels,[]
+X_train, X_test, y_train, y_test, TS, VS = data_prep_fun(X,X_sel,y_sel)
+
+split_df = pd.DataFrame(list(zip(TS,VS)),columns=["TS ID","VS ID"])
+# st.markdown("#### :file_folder: Training/Test Set Labels")
+# st.write(split_df)
+
+# --------------------------------------------------------------------------------------------------------------------------------------------
+# run logistic regression
+# --------------------------------------------------------------------------------------------------------------------------------------------
+
+from sigman_logreg.sig_fun import man_sel_feat,forward_step_logreg,logreg_prep
+
+df_train, df_test, newcols, response = logreg_prep(X_train,y_train,X_test,y_test,skipfeatures=[])
+
+st.markdown("#### Example of showing manual model")
+
+features_x=('x386','x459')
+man_sel_feat(X_train,X_test,y_train,y_test,X_labels,X_labelname,X_names,y_labels,TS,VS,df_train,df_test,features_x,annotate_test_set=False,annotate_training_set=False)
