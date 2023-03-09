@@ -7,7 +7,8 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split,RepeatedKFold,cross_val_score,cross_validate
 
 import sigman_logreg.Logistic_Regression as fsc
-from sigman_logreg.logreg_stats import calc_mcfad, calc_mcfadden_R2, precision_recall_f1_score, test_accuracy_score, kfold_logreg 
+from sigman_logreg.logreg_stats import calc_mcfad, calc_mcfadden_R2, precision_recall_f1_score, test_accuracy_score, kfold_logreg
+from sigman_logreg.sig_fun import plot_fit_1D
 
 import multiprocessing
 nproc = max([1,multiprocessing.cpu_count()-2])
@@ -19,6 +20,23 @@ import streamlit as st
 
 # Plot top univariates
 # Direct copy and paste from Sigman repo, adding in streamlit widgets when needed for user input
+st.markdown("# Get top univariate logistic regression models")
+
+results_1_param = pd.DataFrame(columns=['Model', 'Accuracy', 'McFadden_R2', 'Param_name', 'Threshold_Value'])
+
+count = 0
+for i in range(len(X_labels)):
+    term = X_labels[i]
+    X_sel = X[:, i].reshape(-1,1)
+    lr = LogisticRegression().fit(X_sel,y)
+    acc = round(lr.score(X_sel,y), 2)
+    mcfad_r2 = round(calc_mcfad(X_sel, y), 2)
+    m, b = lr.coef_[0][0], lr.intercept_[0]
+    row_i = {'Model': term, 'Accuracy': acc, 'McFadden_R2': mcfad_r2, 'Param_name': X_labelname_dict[term], 'Threshold_Value': -b/m}
+    results_1_param = results_1_param.append(row_i, ignore_index=True)
+
+results_1_param = results_1_param.sort_values('McFadden_R2', ascending=False)
+results_1_param.head(10)
 
 st.markdown("# Plot top univariate logistic regression models")
 

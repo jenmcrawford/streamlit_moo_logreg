@@ -4,11 +4,11 @@ from sklearn import LogisticRegression
 
 ##############################################################################
 #
-# Use plotting functions from initial notebook
+# Use plotting functions from initial notebook - added global variables as function arguments
 #
 #############################################################################
 
-def plot_fit_1D(feat, df_combined, save_fig=False):  
+def plot_fit_1D(feat, df_combined, X_labelname_dict,save_fig=False):  
     X_train = np.array(df_combined.loc[:, [feat]])
     y_train = np.array(df_combined.iloc[:, -1])
     lr = LogisticRegression().fit(X_train,y_train)
@@ -41,7 +41,7 @@ def plot_fit_1D(feat, df_combined, save_fig=False):
         plt.savefig(feat + '.png', dpi=500)
     plt.show()
 
-def heatmap_logreg(feat1, feat2, df_train, df_test, model, annotate_test = False, annotate_train = False):  
+def heatmap_logreg(feat1, feat2, df_train, df_test, model, X_names,y_train,colormap_scheme, point_color, y_labels, annotate_test = False, annotate_train = False):  
     #Train model on features
     p1_vals = df_train.iloc[:, feat1]
     p2_vals = df_train.iloc[:, feat2]

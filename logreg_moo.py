@@ -33,18 +33,24 @@ st.markdown("# :cow2: Multi-Objective Optimization :cow2:")
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
 # using empty lists as placeholders for imports to avoid issues with initialization
+
 expinp = []
 compinp = []
 
-st.sidebar.markdown("## Import experimental data")
-exp_up = st.sidebar.file_uploader("Results?",type=".xlsx")
+#initialize import process
+if "import_complete" not in st.session_state:
+    st.session_state.import_complete = False
 
-if exp_up:
+st.sidebar.markdown("## Import experimental data")
+exp_up = st.sidebar.file_uploader("Results?",type=".xlsx",key="exp_uploader")
+
+if st.session_state.exp_uploader:
     exp_sheet = 'Data' # data excel sheet name
     y_label_col_exp= 1 # 0-indexed, the number of the column with the ligand idss
     expinp = pd.read_excel(exp_up,exp_sheet,index_col=y_label_col_exp,engine='openpyxl') #feels like there's a better way -- not going to bother improving
 
-par_opt = st.sidebar.radio("Do you need to upload your own parameter set?",("No","Yes"))
+par_opt = st.sidebar.radio("Do you need to upload your own parameter set?",("No","Yes"),key="param_upload")
+#default parameters are bisphosphine, but this obviously is unnecessary
 if par_opt == "No":
     compinp = pd.read_excel("Bisphosphine_Parameters.xlsx",sheet_name="symm_adapt_lowconf")
 if par_opt == "Yes":
@@ -114,6 +120,9 @@ with col1:
     fig1, ax1 = plt.subplots()
     ax1.hist(y_og)
 
+    ax1.set_xlabel("Reaction output")
+    ax1.set_ylabel("Count")
+
     st.pyplot(fig1)
 
 with col2:
@@ -121,4 +130,34 @@ with col2:
     fig2, ax2 = plt.subplots()
     ax2.hist(y)
 
+    ax2.set_xticks([0,1])
+    ax2.set_xlabel("Class")
+    ax2.set_ylabel("Count")
+
     st.pyplot(fig2)
+
+#update session state with complete import
+if st.session_state.param_import == True and st.session_state.exp_import == True:
+    st.session_state.import_complete = True
+
+# Direct copy and paste from Sigman repo, adding in streamlit widgets when needed for user input
+# --------------------------------------------------------------------------------------------------------------------------------------------
+# top univariate logistic regression
+# --------------------------------------------------------------------------------------------------------------------------------------------
+st.markdown("## :medal: Get top univariate logistic regression models")
+
+results_1_param = pd.DataFrame(columns=['Model', 'Accuracy', 'McFadden_R2', 'Param_name', 'Threshold_Value'])
+
+count = 0
+for i in range(len(X_labels)):
+    term = X_labels[i]
+    X_sel = X[:, i].reshape(-1,1)
+    lr = LogisticRegression().fit(X_sel,y)
+    acc = round(lr.score(X_sel,y), 2)
+    mcfad_r2 = round(calc_mcfad(X_sel, y), 2)
+    m, b = lr.coef_[0][0], lr.intercept_[0]
+    row_i = {'Model': term, 'Accuracy': acc, 'McFadden_R2': mcfad_r2, 'Param_name': X_labelname_dict[term], 'Threshold_Value': -b/m}
+    results_1_param = results_1_param.append(row_i, ignore_index=True)
+
+results_1_param = results_1_param.sort_values('McFadden_R2', ascending=False)
+results_1_param.head(10)

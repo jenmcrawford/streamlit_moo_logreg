@@ -19,6 +19,9 @@ def param_preprocess(compinp):
     compnan = np.isnan(X_all).any(axis=1)
     y_labels_comp,X_all = y_labels_comp[~compnan],X_all[~compnan]
 
+    if "param_import" not in st.session_state:
+        st.session_state.param_import = True
+
     return X_names, X_labels, X_all, y_labels_comp, X_labelname, X_labelname_dict
 
 def exp_preprocess(expinp,resp_label,y_labels_comp,y_cut):
@@ -44,6 +47,9 @@ def exp_preprocess(expinp,resp_label,y_labels_comp,y_cut):
     y = np.array([1 if result > y_cut else 0 for result in y_og])
 
     y_labels = y_labels_exp[np.array(mask)]
+
+    if "exp_import" not in st.session_state:
+        st.session_state.exp_import = True
 
     return y_labels_exp, y, y_labels, y_og
 
