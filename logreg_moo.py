@@ -41,8 +41,8 @@ exp_up = st.sidebar.file_uploader("Results?",type=".xlsx")
 
 if exp_up:
     exp_sheet = 'Data' # data excel sheet name
-    y_label_col_exp= 1 # 0-indexed, the number of the column with the ligand ids
-    expinp = pd.read_excel(exp_up,exp_sheet,header=2,index_col=y_label_col_exp,usecols=list(range(0,response_col+1)),engine='openpyxl') #feels like there's a better way -- not going to bother improving
+    y_label_col_exp= 1 # 0-indexed, the number of the column with the ligand idss
+    expinp = pd.read_excel(exp_up,exp_sheet,index_col=y_label_col_exp,engine='openpyxl') #feels like there's a better way -- not going to bother improving
 
 par_opt = st.sidebar.radio("Do you need to upload your own parameter set?",("No","Yes"))
 if par_opt == "No":
@@ -60,6 +60,9 @@ y_cut = st.sidebar.number_input("Determine threshold value for hit/no-hit:",min_
 
 if type(compinp) is not list: #use session state instead?
 
+    st.markdown("### :white_check_mark: :white_check_mark: Double check your imports!")
+    st.markdown("***Current assumption for parameter import is that there are two rows of header information***")
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -70,27 +73,52 @@ if type(compinp) is not list: #use session state instead?
         dropbool = st.radio("Any other columns that should be dropped?",("No","Yes"))
 
         if dropbool == "Yes":
-            dropset = st.multiselect("Any other columns that should be dropped?",compinp.columns)
-            if len(dropset) > 1:
-                compinp.drop(dropset,axis=1)
+            dropset = st.multiselect("Which ones?",compinp.columns)
+
+            if len(dropset) > 0:
+                compinp.drop(columns=dropset,inplace=True)
 
     with col2:
         if type(expinp) is not list:
-            option = st.selectbox(
+            resp_label = st.selectbox(
                 "What is the reaction output?",
                 options=expinp.columns
             )
-            response_col = expinp.columns.get_loc(option)
+            # response_col = expinp.columns.get_loc(option)
 
-    st.markdown("## Currently loaded descriptors and reaction information")
-    st.write(compinp)
-    st.write(expinp)
+    st.markdown("### Currently loaded descriptors and reaction information")
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        st.markdown("#### :floppy_disk: Parameter Dataframe")
+        st.write(compinp)
+    with col4:
+        st.markdown("#### :test_tube: Reaction Information")
+        st.write(expinp)
+
+    X_names, X_labels, X_all, y_labels_comp, X_labelname, X_labelname_dict = inp.param_preprocess(compinp)
+    y_labels_exp, y, y_labels, y_og = inp.exp_preprocess(expinp,resp_label,y_labels_comp, y_cut)
+
+    # X = array of descriptor values for the ligands with experimental results
+    X = np.asarray(compinp.loc[y_labels],dtype=np.float)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
-# assign class identity based on y_cut
+# view if class imbalance
 # --------------------------------------------------------------------------------------------------------------------------------------------
 
+col1, col2 = st.columns(2)
 
-# --------------------------------------------------------------------------------------------------------------------------------------------
-# dropna and initial feature selection based on collinearity criteria
-# --------------------------------------------------------------------------------------------------------------------------------------------
+with col1:
+    st.markdown("#### :bar_chart: Original distribution")
+    fig1, ax1 = plt.subplots()
+    ax1.hist(y_og)
+
+    st.pyplot(fig1)
+
+with col2:
+    st.markdown("#### :robot_face: Class labels")
+    fig2, ax2 = plt.subplots()
+    ax2.hist(y)
+
+    st.pyplot(fig2)
