@@ -1,0 +1,8 @@
+matplotlib==3.7.1
+numpy @ file:///Users/runner/miniforge3/conda-bld/numpy_1666788470527/work
+openpyxl==3.1.1
+pandas==1.5.1
+scikit-learn @ file:///Users/runner/miniforge3/conda-bld/scikit-learn_1666884973515/work
+scipy==1.9.3
+SQLAlchemy @ file:///Users/runner/miniforge3/conda-bld/sqlalchemy_1668277502874/work
+streamlit==1.19.0
