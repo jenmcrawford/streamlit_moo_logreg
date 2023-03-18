@@ -52,15 +52,13 @@ if st.session_state.exp_uploader:
     expinp = pd.read_excel(exp_up,exp_sheet,index_col=y_label_col_exp,engine='openpyxl') #feels like there's a better way -- not going to bother improving
 
 par_opt = st.sidebar.radio("Do you need to upload your own parameter set?",("No","Yes"),key="param_upload")
+st.sidebar.markdown("**Default parameter set is database of bisphosphine descriptors**")
 #default parameters are bisphosphine, but this obviously is unnecessary
 if par_opt == "No":
     compinp = pd.read_excel("Bisphosphine_Parameters.xlsx",sheet_name="symm_adapt_lowconf")
 if par_opt == "Yes":
     par_df = st.sidebar.file_uploader("Computed parameter set",type=".xlsx") #maybe need to process to be in same form as standard compinp
     compinp = pd.read_excel(par_df)
-
-
-y_cut = st.sidebar.number_input("Determine threshold value for hit/no-hit:",min_value=0.0,max_value=100.0)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------
 # pre-process data from imports - using typical Sigman formatting for imported Excel sheets
@@ -74,11 +72,12 @@ if type(compinp) is not list: #use session state instead?
     col1, col2 = st.columns(2)
 
     with col1:
-        y_label_col_comp = st.selectbox("Which column contains ligand IDs?",options=compinp.columns)
+        y_label_col_comp = st.selectbox("Which column contains integer ligand IDs?",options=compinp.columns)
         compinp = compinp.set_index(y_label_col_comp)
+
         compinp.index = compinp.index.map(str)
 
-        dropbool = st.radio("Any other columns that should be dropped?",("No","Yes"))
+        dropbool = st.radio("Any other columns that should be dropped? (i.e., a column that is mostly text)",("Yes","No"))
 
         if dropbool == "Yes":
             dropset = st.multiselect("Which ones?",compinp.columns)
@@ -104,6 +103,13 @@ if type(compinp) is not list: #use session state instead?
     with col4:
         st.markdown("#### :test_tube: Reaction Information")
         st.write(expinp)
+
+
+    st.markdown("#### What should be the cut-off value to determine class identity? What defines a hit/no-hit?")
+    st.markdown("*Hint: look at the scale of your reaction output*")
+
+
+    y_cut = st.number_input("Determine threshold value for hit/no-hit :scissors:",min_value=0.0,max_value=100.0)
 
     X_names, X_labels, X_all, y_labels_comp, X_labelname, X_labelname_dict = inp.param_preprocess(compinp)
     y_labels_exp, y, y_labels, y_og = inp.exp_preprocess(expinp,resp_label,y_labels_comp, y_cut)
@@ -135,9 +141,9 @@ with col2:
 
     st.pyplot(fig2)
 
-#update session state with complete import
-if st.session_state.param_import == True and st.session_state.exp_import == True:
-    st.session_state.import_complete = True
+# #update session state with complete import
+# if st.session_state.param_import == True and st.session_state.exp_import == True:
+#     st.session_state.import_complete = True
 
 # Direct copy and paste from Sigman repo, adding in streamlit widgets when needed for user input
 # --------------------------------------------------------------------------------------------------------------------------------------------
