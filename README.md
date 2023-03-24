@@ -6,6 +6,8 @@
 
 ***Disclaimer 2: provided as-is as a tool for further development to facilitate the usage of data-driven reaction optimization tools***
 
-## Usage
+## Local Usage
 
 	streamlit run logreg_moo.py
+	
+## Streamlit Community Cloud
